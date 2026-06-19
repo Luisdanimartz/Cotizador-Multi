@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root{
+      --azul:#0f2557;
+      --naranja:#e36f1e;
+      --gris:#f4f6fb;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{ font-family:Segoe UI, Arial; background:var(--gris); padding:20px; }
+    .container{ max-width:1200px; margin:auto; background:white; border-radius:12px; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,.15); }
+    .header{ background:var(--azul); color:white; padding:20px; display:flex; justify-content:space-between; }
+    .logo img{height:90px;}
+    .company{text-align:right;}
+    .title{ text-align:center; color:var(--naranja); padding:20px; font-size:42px; letter-spacing:8px; }
+    .info{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; padding:20px; }
+    .field{ display:flex; flex-direction:column; }
+    .field label{ font-weight:bold; color:var(--azul); margin-bottom:5px; }
+    .field input{ border:none; border-bottom:2px solid #4f73c4; padding:8px; }
+    table{ width:100%; border-collapse:collapse; }
+    th{ background:var(--azul); color:white; padding:12px; }
+    td{ border:1px solid #ddd; padding:8px; }
+    td input{ width:100%; border:none; text-align:right; }
+    .delete{ color:red; cursor:pointer; font-weight:bold; }
+    .actions{ padding:20px; display:flex; gap:10px; flex-wrap:wrap; }
+    button{ padding:10px 15px; border:none; border-radius:6px; color:white; display:flex; align-items:center; gap:6px; }
+    .add{background:#1e3a8a;} .save{background:#16a34a;} .load{background:#f59e0b;} .print{background:#e36f1e;}
+    .summary{ width:300px; margin-left:auto; padding:20px; }
+    .total{ background:#1e3a8a; color:white; padding:10px; margin-top:10px; }
+    .terms{ margin:20px; padding:15px; background:#fffbe9; border:1px solid #e7d784; }
+    .signatures{ display:flex; justify-content:space-around; margin:40px 0; }
+    .line{ border-top:1px solid black; margin-top:50px; }
+    .footer{ text-align:center; padding:10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <img src="https://i.ibb.co/hxwq85ST/IMG-20260617-WA0026.jpg">
+    </div>
+    <div class="company">
+      <h2>MULTI INVERSIONES J.L.I. S.A.</h2>
+      <div>Construcción • Remodelación • Electricidad • Mantenimiento Industrial</div>
+      <div>WhatsApp: 3166-3991 / 3166-3994</div>
+    </div>
+  </div>
+  <div class="title">COTIZACIÓN</div>
+
+  <div class="info">
+    <div class="field"><label>Cliente</label><input id="cliente"></div>
+    <div class="field"><label>Fecha</label><input id="fecha" type="date"></div>
+    <div class="field"><label>NIT</label><input id="nit"></div>
+    <div class="field"><label>No. Cotización</label><input id="numero"></div>
+    <div class="field"><label>Proyecto</label><input id="proyecto"></div>
+    <div class="field"><label>Teléfono</label><input id="telefono"></div>
+  </div>
+
+  <table id="tabla">
+    <tr>
+      <th>#</th><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>Total</th><th></th>
+    </tr>
+    <tbody id="tbody">
+      <tr>
+        <td>1</td>
+        <td contenteditable="true">Producto</td>
+        <td><input type="number" value="1" oninput="calcular()"></td>
+        <td><input type="number" value="0" oninput="calcular()"></td>
+        <td class="number">Q 0.00</td>
+        <td class="delete" onclick="eliminar(this)">X</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="actions">
+    <button class="add" onclick="agregarFila()">➕ Fila</button>
+    <button class="save" onclick="guardar()">💾 Guardar</button>
+    <button class="load" onclick="listar()">📂 Historial</button>
+    <button class="print" onclick="window.print()">🖨️ PDF</button>
+  </div>
+
+  <div class="summary">
+    <div class="total">TOTAL <span id="total">Q 0.00</span></div>
+  </div>
+
+  <div id="historial"></div>
+
+  <div class="terms">
+    <h3>Términos y Condiciones</h3>
+    <ol>
+      <li>Precios finales incluyen IVA.</li>
+      <li>Validez de oferta: 15 días calendario.</li>
+      <li>Forma de pago según acuerdo.</li>
+      <li>Garantía de calidad.</li>
+    </ol>
+  </div>
+
+  <div class="signatures">
+    <div><div class="line"></div>Cliente</div>
+    <div><div class="line"></div>Empresa</div>
+  </div>
+
+  <div class="footer">Gracias por su confianza</div>
+</div>
+
+<script>
+function agregarFila(){
+  let t=document.getElementById("tbody");
+  let r=t.insertRow();
+  r.innerHTML=`
+    <td>${t.rows.length}</td>
+    <td contenteditable="true">Nuevo</td>
+    <td><input type="number" value="1" oninput="calcular()"></td>
+    <td><input type="number" value="0" oninput="calcular()"></td>
+    <td class="number">Q 0.00</td>
+    <td class="delete" onclick="eliminar(this)">X</td>
+  `;
+}
+
+function eliminar(btn){
+  btn.parentElement.remove();
+  calcular();
+}
+
+function calcular(){
+  let filas=document.querySelectorAll("#tbody tr");
+  let total=0;
+  let formato = new Intl.NumberFormat("es-GT", {
+    style: "currency",
+    currency: "GTQ"
+  });
+  filas.forEach(f=>{
+    let c=parseFloat(f.cells[2].querySelector("input").value)||0;
+    let p=parseFloat(f.cells[3].querySelector("input").value)||0;
+    let t=c*p;
+    f.cells[4].innerText=formato.format(t);
+    total+=t;
+  });
+  document.getElementById("total").innerText=formato.format(total);
+  return total;
+}
+
+function guardar(){
+  let lista=JSON.parse(localStorage.getItem("cotizaciones")||"[]");
+  let total=calcular();
+  let data={
+    cliente:document.getElementById("cliente").value,
+    fecha:document.getElementById("fecha").value,
+    tabla:document.getElementById("tbody").innerHTML,
+    total:total
+  };
+  lista.push(data);
+  localStorage.setItem("cotizaciones",JSON.stringify(lista));
+  alert("✅ Guardado");
+}
+
+function listar(){
+  let lista=JSON.parse(localStorage.getItem("cotizaciones")||"[]");
+  let formato = new Intl.NumberFormat("es-GT", {
+    style: "currency",
+    currency: "GTQ"
+  });
+  let html="<h3>Historial</h3>";
+  lista.forEach((c,i)=>{
+    html+=`<div onclick="cargar(${i})">👉 ${c.cliente} (${c.fecha}) - ${formato.format(c.total)}</div>`;
+  });
+  document.getElementById("historial").innerHTML=html;
+}
+
+function cargar(i){
+  let lista=JSON.parse(localStorage.getItem("cotizaciones"));
+  let c=lista[i];
+  document.getElementById("cliente").value=c.cliente;
+  document.getElementById("fecha").value=c.fecha;
+  document.getElementById("tbody").innerHTML=c.tabla;
+  calcular();
+}
+</script>
